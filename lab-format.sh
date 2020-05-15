@@ -2,7 +2,7 @@
 
 #Script for downloading and formatting lab submissions
 
-#Run by using ./lab-download.sh [-cpp] OUTPUT_PATH ZIP_FILE_PATH
+#Run by using ./lab-format.sh [-cpp] OUTPUT_PATH ZIP_FILE_PATH
 
 #OUTPUT_PATH is the folder you would like to output the submissions to.
 #The script will then create a sub folder, so outputing to ~/Desktop/ is a good choice.
