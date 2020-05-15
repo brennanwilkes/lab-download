@@ -83,7 +83,7 @@ eval lab_folder=$( echo -n "$destination_folder/$lab_number/" | tr -s '/')
 }
 
 #unzip submissions
-unzip -q "$zipfile" -d "${lab_folder}unmarked/"
+unzip -qo "$zipfile" -d "${lab_folder}unmarked/"
 
 #cd to submissions folder
 cd "${lab_folder}unmarked/"
@@ -105,8 +105,16 @@ find . -type f -print | while IFS= read -r  file; do
 
 	#Create named folder
 	[ -d "$name" ] || {
-		mkdir "$name"
+		mkdir "$name" 2>/dev/null
+
+		#Check for a duplicate submission
+		[ $? -ne 0 ] && {
+			echo "Please delete all existing student submission folders and rerun $script_name"
+			exit 1
+		}
 	}
+
+
 
 	#Move submission into folder and rename to date
 	mv "$file" "$name/$date$extension"
@@ -122,6 +130,11 @@ find . -type f -print | while IFS= read -r  file; do
 	#exit back to main directory
 	cd ..
 done
+
+#check for error in previous block
+[ $? -ne 0 ] && {
+	exit 1
+}
 
 #setup for percent progress indicator
 num_done=0
