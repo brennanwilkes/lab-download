@@ -20,7 +20,7 @@
 #Dependency check
 unzip -v 2>/dev/null >/dev/null
 [ $? -ne 0 ] && {
-	echo "Please install dependency unzip.
+	echo "Please install dependency 'unzip'. (I'm working on providing gunzip and other unzip program support)
 
 	sudo apt-get install unzip
 	"
