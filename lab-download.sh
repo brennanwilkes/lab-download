@@ -62,7 +62,7 @@ destination_folder="$1"
 }
 
 
-lab_number=$( echo -n "$zipfile" | grep -o '^.*Download' | sed 's/ Download//' | sed 's/ /-/' | tr '[:upper:]' '[:lower:]')
+lab_number=$( echo -n "$zipfile" | grep -o '[^/]*$' | grep -o '^.*Download' | sed 's/ Download//' | sed 's/ /-/' | tr '[:upper:]' '[:lower:]')
 [ "$lab_number" = "" ] || [ "$lab_number" = " " ] && {
 	echo "Invalid zip file name. Please do not rename the zip file. Leave it as downloaded from d2l brightspace"
 	exit 1
@@ -191,5 +191,5 @@ find . -mindepth 1 -maxdepth 1 -type d -print | while IFS= read -r  student; do
 done
 
 
-echo "\e[1A\e[0KProcessed $(( $( ls -l | wc -l ) - 1 )) students submissions"
+echo "\e[1A\e[0KProcessed $(( $( ls -l | wc -l ) - 1 )) students most recent submissions"
 exit 0
