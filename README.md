@@ -1,10 +1,12 @@
-# lab-download
-A tool to download and format lab submissions for marking by Brennan Wilkes
+# lab-format
+A tool to download and format lab/assignment submissions for marking by Brennan Wilkes
 
-Run by using ./lab-download.sh [-cpp] OUTPUT_PATH ZIP_FILE_PATH
+*first*, download all lab/assignment submissions into a *single* zip file, and do not rename the file.
+
+Then, run by using ./lab-format.sh [-cpp] OUTPUT_PATH ZIP_FILE_PATH
 
 **example**
-./lab-download.sh /home/Desktop/ '/home/Downloads/Lab 01 Download May 14, 2020 1129 PM.zip'
+./lab-format.sh /home/Desktop/ '/home/Downloads/Lab 01 Download May 14, 2020 1129 PM.zip'
 
 OUTPUT_PATH is the folder you would like to output the submissions to.
 The script will then create a sub folder, so outputing to ~/Desktop/ is a good choice.
