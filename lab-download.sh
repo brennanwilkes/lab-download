@@ -2,7 +2,7 @@
 
 #Script for downloading and formatting lab submissions
 
-#Run by using ./lab-download.sh OUTPUT_PATH ZIP_FILE_PATH
+#Run by using ./lab-download.sh [-cpp] OUTPUT_PATH ZIP_FILE_PATH
 
 #OUTPUT_PATH is the folder you would like to output the submissions to.
 #The script will then create a sub folder, so outputing to ~/Desktop/ is a good choice.
@@ -11,7 +11,11 @@
 #not change the file name of the zip, as it contains meta data required for this script_name
 #to properly format the submissions. The zip will not be deleted, in case of script failure.
 
+#If you are a cpsc1160 TA, or are marking .cpp projects in general, add the -cpp flag, which
+#will provide additional C++ support including extra formatting, and auto-compiling.
+
 #Brennan Wilkes
+
 
 #Dependency check
 unzip -v 2>/dev/null >/dev/null
@@ -23,17 +27,40 @@ unzip -v 2>/dev/null >/dev/null
 	exit 2
 };
 
+#C++ mode check
+[ "$1" = "-cpp" ] &&{
+	shift
+	cpp_mode=0
+} || {
+	cpp_mode=1
+}
+
+#g++ compile command
+compile_cmd="g++ *.cpp -Wall -g -fsanitize=address -std=c++14 -o main"
+
+
 #Usage message
 script_name=$( echo -n "$0" | grep -o '[^/]*$' )
 [ "$#" -lt 2 ] && {
-	echo "usage: $script_name OUTPUT_PATH ZIP_FILE_PATH"
+	echo "Invalid usage format"
+	echo "usage: $script_name [-cpp] OUTPUT_PATH ZIP_FILE_PATH"
 	exit 1
 }
 
 #Parse lab/assignment number/name
 zipfile="$2"
+[ ! -f "$zipfile" ] && {
+	echo "Invalid zipfile name $zipfile"
+	exit 1
+}
+
 #destination output folder
 destination_folder="$1"
+[ ! -d "$destination_folder" ] && {
+	echo "Invalid destination folder $destination_folder"
+	exit 1
+}
+
 
 lab_number=$( echo -n "$zipfile" | grep -o '^.*Download' | sed 's/ Download//' | sed 's/ /-/' | tr '[:upper:]' '[:lower:]')
 [ "$lab_number" = "" ] || [ "$lab_number" = " " ] && {
@@ -96,11 +123,28 @@ find . -type f -print | while IFS= read -r  file; do
 	cd ..
 done
 
+#setup for percent progress indicator
+num_done=0
+total_to_do=$(( $( ls -l | wc -l ) - 1 ))
+echo ""
+
 #Iterate over every student folder
 find . -mindepth 1 -maxdepth 1 -type d -print | while IFS= read -r  student; do
 
+	#Debug info for slow runs when many files need to be compiled
+	echo -n "\e[1A\e[0K$(( $(( $num_done * 100 )) / $(( $total_to_do )) ))% Done"
+	num_done=$(( $num_done + 1 ))
+
+	#Add newline char if not in C++ mode
+	[ $cpp_mode -eq 1 ] && {
+		echo ""
+	}
+
 	#Enter student folder
 	cd "$student"
+
+	#remove student directory prefix
+	student=$( echo -n "$student" | sed 's/\.\///' )
 
 	#Grab submission name and extension type
 	fn=$( ls )
@@ -113,11 +157,39 @@ find . -mindepth 1 -maxdepth 1 -type d -print | while IFS= read -r  student; do
 	} || {
 
 		#Rename non-zip files to student name
-		mv "$fn" "$( echo -n "$student" | sed 's/\.\///' )$extension"
+		mv "$fn" "$student$extension"
+	}
+
+	#C++ specific stuff
+	[ $cpp_mode -eq 0 ] && {
+
+		#Progress debug info
+		echo " - Compiling $student's project"
+
+		#Delete leftover object and executable files
+		rm *.o 2>/dev/null
+		rm "main" 2>/dev/null
+
+		#If theres a makefile, try running it
+		[ -f "makefile" ] || [ -f "Makefile" ] && {
+			make 2>/dev/null >&2
+			rm *.o 2>/dev/null
+
+			#makefile failed, try g++ compile command
+			[ $? -ne 0 ] && {
+				$compile_cmd 2>/dev/null >&2
+			}
+		} || {
+
+			#no makefile, try g++ compile command
+			$compile_cmd 2>/dev/null >&2
+		}
 	}
 
 	#Exit to main directory
 	cd ..
 done
 
+
+echo "\e[1A\e[0KProcessed $(( $( ls -l | wc -l ) - 1 )) students submissions"
 exit 0
