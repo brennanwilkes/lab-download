@@ -141,6 +141,8 @@ num_done=0
 total_to_do=$(( $( ls -l | wc -l ) - 1 ))
 echo ""
 
+extra_cd=0
+
 #Iterate over every student folder
 find . -mindepth 1 -maxdepth 1 -type d -print | while IFS= read -r  student; do
 
@@ -173,6 +175,11 @@ find . -mindepth 1 -maxdepth 1 -type d -print | while IFS= read -r  student; do
 		mv "$fn" "$student$extension"
 	}
 
+	[ -d "$( ls )" ] && {
+		cd "$( ls )"
+		extra_cd=1
+	}
+
 	#C++ specific stuff
 	[ $cpp_mode -eq 0 ] && {
 
@@ -201,6 +208,10 @@ find . -mindepth 1 -maxdepth 1 -type d -print | while IFS= read -r  student; do
 
 	#Exit to main directory
 	cd ..
+	[ "$extra_cd" -eq 1 ] && {
+		extra_cd=0
+		cd ..
+	}
 done
 
 
