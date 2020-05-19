@@ -27,14 +27,15 @@
 #Path to lab settings folder. Change this if needed
 LAB_FORMAT_SETTINGS_PATH="~/.lab-format-settings/"
 
-#g++ compile command
-compile_cmd="g++ *.cpp -Wall -g -fsanitize=address -std=c++14 -o main"
-
 #Usage message
 script_name=$( echo -n "$0" | grep -o '[^/]*$' )
 
 #all possible settings
 settings_list="working_directory zip_search_directory compile_cmd"
+
+
+#-----------------------------------------------FUNCTIONS-----------------------------------------------
+
 
 #Print all current settings
 print_all_settings() {
@@ -44,6 +45,7 @@ print_all_settings() {
 }
 
 #Reset specific settings to default values
+#This is also the master location within this script for default values.
 reset_setting() {
 	for setting in "$@"; do
 		case "$setting" in
@@ -91,6 +93,7 @@ export LAB_FORMAT_SETTINGS_PATH=$( eval echo -n "$LAB_FORMAT_SETTINGS_PATH/" | t
 } || {
 
 	#Check for unset settings and set them to default
+	#This verifies the integrity of the settings directory
 	for setting in $settings_list; do
 		[ -f "${LAB_FORMAT_SETTINGS_PATH}$setting" ] || {
 			reset_setting "$setting"
@@ -201,7 +204,12 @@ unzip -v 2>/dev/null >/dev/null
 	#Search zipfile directory for newest zip file
 
 	#search for files matching ' Download [Month] [date], [year] [time] AM/PM.zip'
-	zipfile=$( find "$zip_search_directory" -maxdepth 1 -type f -print | grep -E ' Download \w+ [0-9][0-9]?, [0-9][0-9][0-9][0-9] [0-9][0-9]?[0-9][0-9]? [AP]M.zip$' | head -n1 )
+	#Search the zip search directory with find for files at depth level 1.
+	#Print them prefixed with their creation time
+	#Sort by creation time.
+	#Filter by regex (see above)
+	#Grab the most recent, and filter out the prefixed time
+	zipfile=$( find "$zip_search_directory" -maxdepth 1 -type f -printf "%T@ %p\n" | sort -nr | grep -E ' Download \w+ [0-9][0-9]?, [0-9][0-9][0-9][0-9] [0-9][0-9]?[0-9][0-9]? [AP]M.zip$' | head -n1 | sed 's/^[0-9]*.[0-9]* //')
 	[ -f "$zipfile" ] && {
 		echo "Autodetected '$( echo -n "$zipfile" | grep -o '[^/]*$' )'"
 		echo -n "Use? [y]/[n]: "
