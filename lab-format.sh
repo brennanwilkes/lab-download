@@ -33,6 +33,9 @@ compile_cmd="g++ *.cpp -Wall -g -fsanitize=address -std=c++14 -o main"
 #Usage message
 script_name=$( echo -n "$0" | grep -o '[^/]*$' )
 
+#all possible settings
+settings_list="working_directory zip_search_directory compile_cmd"
+
 #Print all current settings
 print_all_settings() {
 	find "${LAB_FORMAT_SETTINGS_PATH}" -type f -print | while IFS= read -r  setting; do
@@ -40,13 +43,36 @@ print_all_settings() {
 	done
 }
 
+#Reset specific settings to default values
+reset_setting() {
+	for setting in "$@"; do
+		case "$setting" in
+
+			"working_directory")
+				echo -n "~/Desktop" > "${LAB_FORMAT_SETTINGS_PATH}working_directory"
+				;;
+
+			"zip_search_directory")
+				echo -n "~/Downloads" > "${LAB_FORMAT_SETTINGS_PATH}zip_search_directory"
+				;;
+
+			"compile_cmd")
+				echo -n "g++ *.cpp -Wall -g -fsanitize=address -std=c++14 -o main" > "${LAB_FORMAT_SETTINGS_PATH}compile_cmd"
+				;;
+		esac
+	done
+}
+
 #Reset all settings to defaults
 reset_all_settings() {
+
+	#Delete all files in path folder
 	[ -z "$( ls $LAB_FORMAT_SETTINGS_PATH )" ] || {
 		eval rm "$LAB_FORMAT_SETTINGS_PATH*"
 	}
-	echo -n "~/Desktop" > "${LAB_FORMAT_SETTINGS_PATH}working_directory"
-	echo -n "~/Downloads" > "${LAB_FORMAT_SETTINGS_PATH}zip_search_directory"
+
+	#Call reset on all settings
+	reset_setting $settings_list
 }
 
 #-----------------------------------------------SETTINGS-----------------------------------------------
@@ -57,15 +83,25 @@ export LAB_FORMAT_SETTINGS_PATH=$( eval echo -n "$LAB_FORMAT_SETTINGS_PATH/" | t
 
 #Check for settings file
 [ ! -d "$LAB_FORMAT_SETTINGS_PATH" ] && {
+
 	#Create settings
 	echo "First time run - creating settings folder at $LAB_FORMAT_SETTINGS_PATH"
 	mkdir "$LAB_FORMAT_SETTINGS_PATH"
 	reset_all_settings
+} || {
+
+	#Check for unset settings and set them to default
+	for setting in $settings_list; do
+		[ -z "${LAB_FORMAT_SETTINGS_PATH}$setting" ] || {
+			reset_setting "$setting"
+		}
+	done
 }
 
 #load settings
 working_path=$( eval echo -n $( cat "${LAB_FORMAT_SETTINGS_PATH}working_directory" ) )
 zip_search_directory=$( eval echo -n $( cat "${LAB_FORMAT_SETTINGS_PATH}zip_search_directory" ) )
+compile_cmd=$( eval echo -n $( cat "${LAB_FORMAT_SETTINGS_PATH}compile_cmd" ) )
 
 
 #-----------------------------------------------DEPENDENCY-----------------------------------------------
