@@ -92,11 +92,7 @@ export LAB_FORMAT_SETTINGS_PATH=$( eval echo -n "$LAB_FORMAT_SETTINGS_PATH/" | t
 
 	#Check for unset settings and set them to default
 	for setting in $settings_list; do
-<<<<<<< HEAD
 		[ -f "${LAB_FORMAT_SETTINGS_PATH}$setting" ] || {
-=======
-		[ -z "${LAB_FORMAT_SETTINGS_PATH}$setting" ] || {
->>>>>>> 68cba16c7a508d735b19d74bbadaa9db7f5cbe56
 			reset_setting "$setting"
 		}
 	done
