@@ -36,6 +36,6 @@ rubric="$1"
 #filter for lines that start with backslash space number.
 #Grab previous line of context
 #Then add linebreak separators
-echo "$rubric_data" | grep --no-group-separator -E -B 1 '^\/ [0-9]+$' | sed '/^[^/]/i \ ' >> "$rubric"
+echo "$rubric_data" | grep --no-group-separator -E -B 1 '^\/ [0-9]+$' | sed '/^[^/]/i \\x00' | tr -d '\0' >> "$rubric"
 
 exit 0
