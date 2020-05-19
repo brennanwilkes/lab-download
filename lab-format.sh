@@ -283,13 +283,13 @@ rm "index.html"
 #Iterate over every submission
 find . -type f -print | while IFS= read -r  file; do
 
-	#Parse student name
+	#Parce student name
 	name=$( echo -n "$file" | sed 's/ - /\x00/g' | cut -d '' -f2 | tr ' ' '-' )
 
-	#Parse submission date
+	#Parce submission date
 	date=$( echo -n "$file" | sed 's/ - /\x00/g' | cut -d '' -f3 )
 
-	#Parse submission extension
+	#Parce submission extension
 	extension=$( echo -n "$file" | sed 's/ - /\x00/g' | cut -d '' -f4 | grep -o '\.[^.]*$')
 
 	#Create named folder
