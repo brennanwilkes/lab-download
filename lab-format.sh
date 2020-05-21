@@ -33,7 +33,7 @@ script_name=$( echo -n "$0" | grep -o '[^/]*$' )
 #all possible settings
 settings_list="working_directory zip_search_directory compile_cmd compile_output_name"
 
-export VERSION="1.02"
+export VERSION="1.03"
 
 
 #-----------------------------------------------FUNCTIONS-----------------------------------------------
