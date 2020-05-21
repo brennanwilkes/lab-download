@@ -24,5 +24,5 @@ to properly format the submissions. Don't worry, the zip will not be deleted, in
 OUTPUT_PATH is the folder you would like to output the submissions to.
 The script will then create a sub folder, so outputing to ~/Desktop/ is a good choice.
 
-If you are marking .cpp projects, add the --cpp flag, which
+If you are marking C++ projects, add the --cpp flag, which
 will provide additional C++ support including extra formatting, and auto-compiling.
