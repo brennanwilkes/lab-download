@@ -1,4 +1,4 @@
-# lab-format v1.03
+# lab-format v1.04
 A tool to download and format lab/assignment submissions for marking by Brennan Wilkes
 
 *first*, download all lab/assignment submissions into a *single* zip file, and do not rename the file.
@@ -44,6 +44,9 @@ Print version number
 
 	-s SETTING VALUE
 updates a setting, 'SETTING', to value 'VALUE'
+
+	-s NUMBER VALUE
+updates a setting with id 'NUMBER' to value 'VALUE'
 
 	-s RESET
 reset to default settings

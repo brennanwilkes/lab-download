@@ -2,7 +2,7 @@
 
 #Script for downloading and formatting lab submissions
 
-#Run by using ./lab-format.sh [--cpp] [ZIP_FILE_PATH] [OUTPUT_PATH]
+#Run by using ./lab-format.sh [-flags] [ZIP_FILE_PATH] [OUTPUT_PATH]
 
 #**If you do not provide one or both of these arguments, directories from your
 #  default settings folder. Your default settings folder is ~/.lab-format-settings, but
@@ -15,7 +15,7 @@
 #OUTPUT_PATH is the folder you would like to output the submissions to.
 #The script will then create a sub folder, so outputing to ~/Desktop/ is a good choice.
 
-#If you are a cpsc1160 TA, or are marking .cpp projects in general, add the -cpp flag, which
+#If you are a cpsc1160 TA, or are marking C++ projects in general, add the --cpp flag, which
 #will provide additional C++ support including extra formatting, and auto-compiling.
 
 #Brennan Wilkes
@@ -32,8 +32,9 @@ script_name=$( echo -n "$0" | grep -o '[^/]*$' )
 
 #all possible settings
 settings_list="working_directory zip_search_directory compile_cmd compile_output_name"
+settings_list=$( echo -n "$settings_list" | tr ' ' '\n' | sort | tr '\n' ' ' )
 
-export VERSION="1.03"
+VERSION="1.04"
 
 
 #-----------------------------------------------FUNCTIONS-----------------------------------------------
@@ -41,9 +42,11 @@ export VERSION="1.03"
 
 #Print all current settings
 print_all_settings() {
+	setting_counter=0
 	echo -n '\n'
-	find "${LAB_FORMAT_SETTINGS_PATH}" -type f -print | while IFS= read -r  setting; do
-		printf '%-20s : %s\n\n' "$( echo -n $setting | grep -o '[^/]*$' )" "$( cat $setting )"
+	find "${LAB_FORMAT_SETTINGS_PATH}" -type f -print | sort | while IFS= read -r  setting; do
+		printf '[%s] %-20s : %s\n\n' "$setting_counter" "$( echo -n $setting | grep -o '[^/]*$' )" "$( cat $setting )"
+		setting_counter=$(( $setting_counter + 1 ))
 	done
 }
 
@@ -156,6 +159,7 @@ Options:
 	--cpp  C++ Specific features. Will remove students .o and main files, and will attempt to auto-compile .cpp files
 
 	-s SETTING VALUE  updates a setting, 'SETTING', to value 'VALUE'
+	-s NUMBER VALUE updates a setting with id 'NUMBER' to value 'VALUE'
 	-s RESET  reset to default settings
 	-s VIEW  view all current settings
 
@@ -185,21 +189,37 @@ Options:
 		exit 0
 	}
 
+	setting="$1"
+	value="$2"
+
 	#Check required arguments
 	[ "$#" -eq 2 ] && {
 
+		#Detect id numbers and convert to setting
+		setting_id=$( echo "$setting" | grep -E '^[0-9]+$' )
+
+		[ -z "$setting_id" ] || {
+			setting_num=0
+			for enum in $settings_list; do
+				[ "$setting_id" -eq "$setting_num" ] && {
+					setting=$enum
+				}
+				setting_num=$(( $setting_num + 1 ))
+			done;
+		}
+
 		#Check valid setting key
-		[ -f "${LAB_FORMAT_SETTINGS_PATH}$1" ] && {
+		[ -f "${LAB_FORMAT_SETTINGS_PATH}$setting" ] && {
 
 			#update setting
-			echo -n "$2" > "${LAB_FORMAT_SETTINGS_PATH}$1"
+			echo -n "$value" > "${LAB_FORMAT_SETTINGS_PATH}$setting"
 			print_all_settings
 
 			exit 0
 		} || {
 
 			#Invalid
-			echo "Invalid setting $1"
+			echo "Invalid setting $setting"
 			print_all_settings
 
 			exit 1
@@ -207,7 +227,7 @@ Options:
 	} || {
 
 		#Error message
-		echo "Inavlid settings key pair $1 - $2"
+		echo "Inavlid settings key pair $setting - $value"
 		echo "Usage: $script_name -s SETTING VALUE"
 		echo "Usage: $script_name -s RESET"
 		echo "Usage: $script_name -s VIEW"
