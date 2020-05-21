@@ -33,7 +33,7 @@ script_name=$( echo -n "$0" | grep -o '[^/]*$' )
 #all possible settings
 settings_list="working_directory zip_search_directory compile_cmd"
 
-export VERSION="1.01"
+export VERSION="1.02"
 
 
 #-----------------------------------------------FUNCTIONS-----------------------------------------------
@@ -141,15 +141,16 @@ unzip -v 2>/dev/null >/dev/null
 	echo "  [OUTPUT_PATH]  Directory to output lab folders to. Default is ~/Desktop/ \n\n"
 	echo "  Options: \n"
 	echo "  --cpp  C++ Specific features. Will remove students .o and main files, and will attempt to auto-compile .cpp files \n"
-	echo "  --help Display usage message. Man page coming soon (maybe?)\n"
 	echo "  -s SETTING VALUE  updates a setting, 'SETTING', to value 'VALUE'"
 	echo "  -s RESET  reset to default settings"
 	echo "  -s VIEW  view all current settings\n"
+	echo "  --help Display usage message. Man page coming soon (maybe?)\n"
+	echo "  --version Display version number \n"
 	exit 0
-}
+} | more
 
 [ "$1" = "--version" ] || [ "$1" = "-v" ] || [ "$1" = "-version" ] && {
-	echo "$script_name version $VERSION"
+	echo "$script_name v$VERSION"
 	exit 0
 }
 
