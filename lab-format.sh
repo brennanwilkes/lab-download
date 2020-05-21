@@ -31,7 +31,7 @@ LAB_FORMAT_SETTINGS_PATH="~/.lab-format-settings/"
 script_name=$( echo -n "$0" | grep -o '[^/]*$' )
 
 #all possible settings
-settings_list="working_directory zip_search_directory compile_cmd"
+settings_list="working_directory zip_search_directory compile_cmd compile_output_name"
 
 export VERSION="1.02"
 
@@ -41,8 +41,9 @@ export VERSION="1.02"
 
 #Print all current settings
 print_all_settings() {
+	echo -n '\n'
 	find "${LAB_FORMAT_SETTINGS_PATH}" -type f -print | while IFS= read -r  setting; do
-		echo "$( echo -n $setting | grep -o '[^/]*$' ) : $( cat $setting )"
+		printf '%-20s : %s\n\n' "$( echo -n $setting | grep -o '[^/]*$' )" "$( cat $setting )"
 	done
 }
 
@@ -53,15 +54,19 @@ reset_setting() {
 		case "$setting" in
 
 			"working_directory")
-				echo -n "~/Desktop" > "${LAB_FORMAT_SETTINGS_PATH}working_directory"
+				echo -n "~/Desktop" > "$LAB_FORMAT_SETTINGS_PATH$setting"
 				;;
 
 			"zip_search_directory")
-				echo -n "~/Downloads" > "${LAB_FORMAT_SETTINGS_PATH}zip_search_directory"
+				echo -n "~/Downloads" > "$LAB_FORMAT_SETTINGS_PATH$setting"
 				;;
 
 			"compile_cmd")
-				echo -n "g++ *.cpp -Wall -g -fsanitize=address -std=c++14 -o main" > "${LAB_FORMAT_SETTINGS_PATH}compile_cmd"
+				echo -n "g++ *.cpp -Wall -g -fsanitize=address -std=c++14 -o main" > "$LAB_FORMAT_SETTINGS_PATH$setting"
+				;;
+
+			"compile_output_name")
+				echo -n "compile_output.txt" > "$LAB_FORMAT_SETTINGS_PATH$setting"
 				;;
 		esac
 	done
@@ -107,6 +112,7 @@ export LAB_FORMAT_SETTINGS_PATH=$( eval echo -n "$LAB_FORMAT_SETTINGS_PATH/" | t
 working_path=$( eval echo -n $( cat "${LAB_FORMAT_SETTINGS_PATH}working_directory" ) )
 zip_search_directory=$( eval echo -n $( cat "${LAB_FORMAT_SETTINGS_PATH}zip_search_directory" ) )
 compile_cmd=$( eval echo -n $( cat "${LAB_FORMAT_SETTINGS_PATH}compile_cmd" ) )
+compile_output_name=$( eval echo -n $( cat "${LAB_FORMAT_SETTINGS_PATH}compile_output_name" ) )
 
 
 #-----------------------------------------------DEPENDENCY-----------------------------------------------
@@ -400,18 +406,30 @@ find . -mindepth 1 -maxdepth 1 -type d -print | while IFS= read -r  student; do
 
 		#If theres a makefile, try running it
 		[ -f "makefile" ] || [ -f "Makefile" ] && {
-			make 2>/dev/null >&2
+			make 2>>"$compile_output_name" >/dev/null
 			rm *.o 2>/dev/null
 
 			#makefile failed, try g++ compile command
 			[ $? -ne 0 ] && {
-				$compile_cmd 2>/dev/null >&2
+				$compile_cmd 2>>"$compile_output_name" >/dev/null
 			}
 		} || {
 
 			#no makefile, try g++ compile command
-			$compile_cmd 2>/dev/null >&2
+			$compile_cmd 2>>"$compile_output_name" >/dev/null
 		}
+
+		#format error file
+		temp_comple_output=$( cat "$compile_output_name" )
+		echo -n '' > "$compile_output_name"
+		#remove make warnings
+		echo -n "$temp_comple_output" | sed 'G' | grep -v '^make: ' >> "$compile_output_name"
+
+		#If no errors, delete error log
+		[ -z "$( cat $compile_output_name )" ] && {
+			rm $compile_output_name
+		}
+
 	}
 
 	#Exit to main directory
