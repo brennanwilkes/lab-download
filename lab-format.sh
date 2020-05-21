@@ -135,19 +135,29 @@ unzip -v 2>/dev/null >/dev/null
 }
 
 [ "$1" = "--help" ] || [ "$1" = "-help" ] && {
-	echo "usage: $script_name [ZIP_FILE_PATH] [OUTPUT_PATH] \n\n"
-	echo "  Arguments: \n"
-	echo "  [ZIP_FILE_PATH]  Path to zip file downloaded from d2l containing all student submissions \n"
-	echo "  [OUTPUT_PATH]  Directory to output lab folders to. Default is ~/Desktop/ \n\n"
-	echo "  Options: \n"
-	echo "  --cpp  C++ Specific features. Will remove students .o and main files, and will attempt to auto-compile .cpp files \n"
-	echo "  -s SETTING VALUE  updates a setting, 'SETTING', to value 'VALUE'"
-	echo "  -s RESET  reset to default settings"
-	echo "  -s VIEW  view all current settings\n"
-	echo "  --help Display usage message. Man page coming soon (maybe?)\n"
-	echo "  --version Display version number \n"
+	echo "usage: $script_name [ZIP_FILE_PATH] [OUTPUT_PATH]
+
+
+Arguments:
+
+	[ZIP_FILE_PATH]  Path to zip file downloaded from d2l containing all student submissions
+
+	[OUTPUT_PATH]  Directory to output lab folders to. Default is ~/Desktop/
+
+
+Options:
+
+	--cpp  C++ Specific features. Will remove students .o and main files, and will attempt to auto-compile .cpp files
+
+	-s SETTING VALUE  updates a setting, 'SETTING', to value 'VALUE'
+	-s RESET  reset to default settings
+	-s VIEW  view all current settings
+
+	--help Display usage message. Man page coming soon (maybe?)
+
+	--version Display version number" | more
 	exit 0
-} | more
+}
 
 [ "$1" = "--version" ] || [ "$1" = "-v" ] || [ "$1" = "-version" ] && {
 	echo "$script_name v$VERSION"
