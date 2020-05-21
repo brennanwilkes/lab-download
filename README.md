@@ -17,12 +17,26 @@ Usage has recently changed. please run ./lab-format --help for help with setting
 **example**
 ./lab-format.sh '/home/Downloads/Lab 01 Download May 14, 2020 1129 PM.zip' /home/Desktop/
 
-ZIP_FILE_PATH is the path to the downloaded zip file from d2l brightspace. *NOTE*, do
+**options**
+
+	ZIP_FILE_PATH is the path to the downloaded zip file from d2l brightspace. *NOTE*, do
 not change the file name of the zip, as it contains meta data required for this script_name
 to properly format the submissions. Don't worry, the zip will not be deleted, in case of script failure.
 
-OUTPUT_PATH is the folder you would like to output the submissions to.
+	OUTPUT_PATH is the folder you would like to output the submissions to.
 The script will then create a sub folder, so outputing to ~/Desktop/ is a good choice.
 
-If you are marking C++ projects, add the --cpp flag, which
+**Flags/Options**
+
+	--cpp - If you are marking C++ projects, add the --cpp flag, which
 will provide additional C++ support including extra formatting, and auto-compiling.
+
+	--help - Print usage and help messages
+
+	--version - Print version number
+
+**Settings**
+
+	-s SETTING VALUE - updates a setting, 'SETTING', to value 'VALUE'
+	-s RESET         - reset to default settings
+	-s VIEW          - view all current settings
