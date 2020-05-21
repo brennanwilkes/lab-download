@@ -33,6 +33,8 @@ script_name=$( echo -n "$0" | grep -o '[^/]*$' )
 #all possible settings
 settings_list="working_directory zip_search_directory compile_cmd"
 
+export VERSION="1.00"
+
 
 #-----------------------------------------------FUNCTIONS-----------------------------------------------
 
@@ -143,6 +145,11 @@ unzip -v 2>/dev/null >/dev/null
 	echo "  -s SETTING VALUE  updates a setting, 'SETTING', to value 'VALUE'"
 	echo "  -s RESET  reset to default settings"
 	echo "  -s VIEW  view all current settings\n"
+	exit 0
+}
+
+[ "$1" = "--version" ] && {
+	echo "$script_name version $VERSION"
 	exit 0
 }
 
