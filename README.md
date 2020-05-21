@@ -4,7 +4,9 @@ A tool to download and format lab/assignment submissions for marking by Brennan 
 *first*, download all lab/assignment submissions into a *single* zip file, and do not rename the file.
 
 Then, run by using ./lab-format.sh [ZIP_FILE_PATH] [OUTPUT_PATH] OR
+
                    ./lab-format.sh [ZIP_FILE_PATH] - automatic output OR
+				   
                    ./lab-format.sh - full automatic mode
 
 **Important**
