@@ -44,7 +44,9 @@ Print version number
 
 	-s SETTING VALUE
 updates a setting, 'SETTING', to value 'VALUE'
+
 	-s RESET
 reset to default settings
+
 	-s VIEW
 view all current settings
