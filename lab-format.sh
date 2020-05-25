@@ -34,7 +34,7 @@ script_name=$( echo -n "$0" | grep -o '[^/]*$' )
 settings_list="working_directory zip_search_directory compile_cmd compile_output_name"
 settings_list=$( echo -n "$settings_list" | tr ' ' '\n' | sort | tr '\n' ' ' )
 
-VERSION="1.04"
+VERSION="1.05"
 
 
 #-----------------------------------------------FUNCTIONS-----------------------------------------------
@@ -336,6 +336,13 @@ find . -type f -print | while IFS= read -r  file; do
 	#Parse submission extension
 	extension=$( echo -n "$file" | sed 's/ - /\x00/g' | cut -d '' -f4 | grep -o '\.[^.]*$')
 
+	#Parse submission file name. This is for non-zips.
+	original_filename=$( echo -n "$file" | sed 's/ - /\x00/g' | cut -d '' -f4 | tr ' ' '-' )
+
+	#Parse id number. This is for users who decide to upload multiple files of the exact same name.
+	#Honestly who does this??? Idk if anyone will but I'm trying to semi-idiot proof it.
+	submission_id=$( echo -n "$file" | sed 's/ - /\x00/g' | cut -d '' -f1 | sed 's/\.\///' )
+
 	#Create named folder
 	[ -d "$name" ] || {
 		mkdir "$name" 2>/dev/null
@@ -348,21 +355,35 @@ find . -type f -print | while IFS= read -r  file; do
 		}
 	}
 
-
-
 	#Move submission into folder and rename to date
-	mv "$file" "$name/$date$extension"
+	[ "$extension" = ".zip" ] && {
+		mv "$file" "$name/$date$extension"
 
-	#Enter named folder
-	cd "$name"
+		#Enter named folder
+		cd "$name"
 
-	#Remove older submissions
-	[ $( ls -1 | wc -l ) -gt 1 ] && {
-		rm "$( ls -t | tail -n1 )"
+		#Remove older submissions
+		[ $( ls -1 | wc -l ) -gt 1 ] && {
+			rm "$( ls -t | tail -n1 )"
+		}
+
+		#exit back to main directory
+		cd ..
+
+	} || {
+
+		#User submitted multiple files, try to keep all of them
+		#If a user did something weird, the marker is going to have to manually
+		#figure it out. This might get improved as time goes on, as it might cause
+		#issues if a student has multiple submissions, of multiple non-zipped files.
+
+		#duplicate file names should be handled by appending the ID name.
+		[ -f "$name/$original_filename" ] && {
+			mv "$file" "$name/${submission_id}-$original_filename"
+		} || {
+			mv "$file" "$name/$original_filename"
+		}
 	}
-
-	#exit back to main directory
-	cd ..
 done
 
 #check for error in previous block
@@ -403,10 +424,6 @@ find . -mindepth 1 -maxdepth 1 -type d -print | while IFS= read -r  student; do
 	[ "$extension" = ".zip" ] && {
 		unzip -q "$fn"
 		rm "$fn"
-	} || {
-
-		#Rename non-zip files to student name
-		mv "$fn" "$student$extension"
 	}
 
 	[ -d "$( ls )" ] && {
