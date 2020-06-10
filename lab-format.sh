@@ -34,7 +34,7 @@ script_name=$( echo -n "$0" | grep -o '[^/]*$' )
 settings_list="working_directory zip_search_directory compile_cmd compile_output_name"
 settings_list=$( echo -n "$settings_list" | tr ' ' '\n' | sort | tr '\n' ' ' )
 
-VERSION="1.07"
+VERSION="1.08"
 
 
 #-----------------------------------------------FUNCTIONS-----------------------------------------------
@@ -425,6 +425,14 @@ find . -mindepth 1 -maxdepth 1 -type d -print | while IFS= read -r  student; do
 		unzip -q "$fn"
 		rm "$fn"
 	}
+
+	#Delete MAC specific garbage unless you're using mac yourself
+	osparent=$( echo -n "$OSTYPE" | grep -o "darwin" )
+	[ "$osparent" = "darwin" ] || {
+		find | grep "__MACOSX" | xargs -rn1 rm -rf
+		find | grep ".DS_STORE" | xargs -rn1 rm
+	}
+
 
 	#Test if there is one inode, and if it is a directory,
 	#ie if the submission contains exclusively 1 directory, no files
