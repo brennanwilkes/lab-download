@@ -34,7 +34,7 @@ script_name=$( echo -n "$0" | grep -o '[^/]*$' )
 settings_list="working_directory zip_search_directory compile_cmd compile_output_name"
 settings_list=$( echo -n "$settings_list" | tr ' ' '\n' | sort | tr '\n' ' ' )
 
-VERSION="1.05"
+VERSION="1.06"
 
 
 #-----------------------------------------------FUNCTIONS-----------------------------------------------
@@ -294,7 +294,7 @@ Options:
 #-----------------------------------------------MAIN-----------------------------------------------
 
 
-lab_number=$( echo -n "$zipfile" | grep -o '[^/]*$' | grep -o '^.*Download' | sed 's/ Download//' | sed 's/ /-/' | tr '[:upper:]' '[:lower:]')
+lab_number=$( echo -n "$zipfile" | grep -o '[^/]*$' | grep -o '^.*Download' | sed 's/ Download//' | sed 's/ /-/g' | tr '[:upper:]' '[:lower:]')
 [ "$lab_number" = "" ] || [ "$lab_number" = " " ] && {
 	echo "Invalid zip file name. Please do not rename the zip file. Leave it as downloaded from d2l brightspace"
 	echo "See $script_name --help for more info"
@@ -328,20 +328,20 @@ rm "index.html"
 find . -type f -print | while IFS= read -r  file; do
 
 	#Parse student name
-	name=$( echo -n "$file" | sed 's/ - /\x00/g' | cut -d '' -f2 | tr ' ' '-' )
+	name=$( echo -n "$file" | sed -E 's/ - +/\x00/g' | cut -d '' -f2 | tr ' ' '-' )
 
 	#Parse submission date
-	date=$( echo -n "$file" | sed 's/ - /\x00/g' | cut -d '' -f3 )
+	date=$( echo -n "$file" | sed -E 's/ - +/\x00/g' | cut -d '' -f3 )
 
 	#Parse submission extension
-	extension=$( echo -n "$file" | sed 's/ - /\x00/g' | cut -d '' -f4 | grep -o '\.[^.]*$')
+	extension=$( echo -n "$file" | sed -E 's/ - +/\x00/g' | cut -d '' -f4 | grep -o '\.[^.]*$')
 
 	#Parse submission file name. This is for non-zips.
-	original_filename=$( echo -n "$file" | sed 's/ - /\x00/g' | cut -d '' -f4 | tr ' ' '-' )
+	original_filename=$( echo -n "$file" | sed -E 's/ - +/\x00/g' | cut -d '' -f4 | tr ' ' '-' )
 
 	#Parse id number. This is for users who decide to upload multiple files of the exact same name.
 	#Honestly who does this??? Idk if anyone will but I'm trying to semi-idiot proof it.
-	submission_id=$( echo -n "$file" | sed 's/ - /\x00/g' | cut -d '' -f1 | sed 's/\.\///' )
+	submission_id=$( echo -n "$file" | sed -E 's/ - +/\x00/g' | cut -d '' -f1 | sed 's/\.\///' )
 
 	#Create named folder
 	[ -d "$name" ] || {
