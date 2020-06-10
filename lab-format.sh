@@ -34,7 +34,7 @@ script_name=$( echo -n "$0" | grep -o '[^/]*$' )
 settings_list="working_directory zip_search_directory compile_cmd compile_output_name"
 settings_list=$( echo -n "$settings_list" | tr ' ' '\n' | sort | tr '\n' ' ' )
 
-VERSION="1.06"
+VERSION="1.07"
 
 
 #-----------------------------------------------FUNCTIONS-----------------------------------------------
@@ -426,13 +426,25 @@ find . -mindepth 1 -maxdepth 1 -type d -print | while IFS= read -r  student; do
 		rm "$fn"
 	}
 
-	[ -d "$( ls )" ] && {
-		cd "$( ls )"
-		extra_cd=1
+	#Test if there is one inode, and if it is a directory,
+	#ie if the submission contains exclusively 1 directory, no files
+	[ "$( ls -l | wc -l )" -eq 2 ] && [ -d "$( ls )" ] && {
+		dir_to_delete=$( ls )
+
+		#move contents of directory to here
+		mv $dir_to_delete/* .
+
+		#Delete empty directory
+		rm -rf "$dir_to_delete"
 	}
 
 	#C++ specific stuff
 	[ $cpp_mode -eq 0 ] && {
+
+		#Search for makefiles in subdirectories and operate there instead
+		old_path="$( pwd )"
+		makefile_path="$( find -iname makefile -print )"
+		[ "$makefile_path" ] && cd $( dirname "$makefile_path" )
 
 		#Progress debug info
 		echo " - Compiling $student's project"
@@ -467,14 +479,13 @@ find . -mindepth 1 -maxdepth 1 -type d -print | while IFS= read -r  student; do
 			rm $compile_output_name
 		}
 
+		#Exit from subdirectory containing makefile
+		cd "$old_path"
+
 	}
 
 	#Exit to main directory
 	cd ..
-	[ "$extra_cd" -eq 1 ] && {
-		extra_cd=0
-		cd ..
-	}
 done
 
 
