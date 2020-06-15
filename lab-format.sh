@@ -34,7 +34,7 @@ script_name=$( echo -n "$0" | grep -o '[^/]*$' )
 settings_list="working_directory zip_search_directory compile_cmd compile_output_name"
 settings_list=$( echo -n "$settings_list" | tr ' ' '\n' | sort | tr '\n' ' ' )
 
-VERSION="1.081"
+VERSION="1.082"
 
 
 #-----------------------------------------------FUNCTIONS-----------------------------------------------
@@ -346,7 +346,7 @@ find . -type f -print | while IFS= read -r  file; do
 
 	#Create named folder
 	[ -d "$name" ] || {
-		mkdir "$name"
+		mkdir "$name" 2>/dev/null
 
 		#Check for a duplicate submission
 		[ $? -ne 0 ] && {
@@ -452,8 +452,8 @@ find . -mindepth 1 -maxdepth 1 -type d -print | while IFS= read -r  student; do
 
 		#Search for makefiles in subdirectories and operate there instead
 		old_path="$( pwd )"
-		makefile_path="$( find -iname makefile -print )"
-		[ "$makefile_path" ] && cd $( dirname "$makefile_path" )
+		makefile_path="$( find -mindepth 2 -iname makefile -print )"
+		[ -d "$makefile_path" ] && cd $( echo -n "$makefile_path" | sed -E 's/\w+$//' )
 
 		#Progress debug info
 		echo " - Compiling $student's project"
