@@ -34,7 +34,7 @@ script_name=$( echo -n "$0" | grep -o '[^/]*$' )
 settings_list="working_directory zip_search_directory compile_cmd compile_output_name"
 settings_list=$( echo -n "$settings_list" | tr ' ' '\n' | sort | tr '\n' ' ' )
 
-VERSION="1.08"
+VERSION="1.081"
 
 
 #-----------------------------------------------FUNCTIONS-----------------------------------------------
@@ -328,7 +328,8 @@ rm "index.html"
 find . -type f -print | while IFS= read -r  file; do
 
 	#Parse student name
-	name=$( echo -n "$file" | sed -E 's/ - +/\x00/g' | cut -d '' -f2 | tr ' ' '-' )
+	#Man the name ' Twinkle <- Yes beginning with an ' and a space is causing so many issues.
+	name=$( echo -n "$file" | sed -E 's/ - +/\x00/g' | cut -d '' -f2 | tr " '" '-' | tr -s '-' | sed -E 's/^\W//g')
 
 	#Parse submission date
 	date=$( echo -n "$file" | sed -E 's/ - +/\x00/g' | cut -d '' -f3 )
@@ -345,7 +346,7 @@ find . -type f -print | while IFS= read -r  file; do
 
 	#Create named folder
 	[ -d "$name" ] || {
-		mkdir "$name" 2>/dev/null
+		mkdir "$name"
 
 		#Check for a duplicate submission
 		[ $? -ne 0 ] && {
