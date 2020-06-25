@@ -34,7 +34,7 @@ script_name=$( echo -n "$0" | grep -o '[^/]*$' )
 settings_list="working_directory zip_search_directory compile_cmd compile_output_name"
 settings_list=$( echo -n "$settings_list" | tr ' ' '\n' | sort | tr '\n' ' ' )
 
-VERSION="1.082"
+VERSION="1.09"
 
 
 #-----------------------------------------------FUNCTIONS-----------------------------------------------
@@ -418,14 +418,17 @@ find . -mindepth 1 -maxdepth 1 -type d -print | while IFS= read -r  student; do
 	student=$( echo -n "$student" | sed 's/\.\///' )
 
 	#Grab submission name and extension type
-	fn=$( ls )
-	extension=$( ls | grep -o '\.[^.]*$' )
+	find . -mindepth 1 -maxdepth 1 -type f -print | while IFS= read -r  fn; do
 
-	#unzip zip file submissions and remove archive
-	[ "$extension" = ".zip" ] && {
-		unzip -q "$fn"
-		rm "$fn"
-	}
+		extension=$( echo "$fn" | grep -o '\.[^.]*$' )
+
+		#unzip zip file submissions and remove archive
+		[ "$extension" = ".zip" ] && {
+			unzip -q "$fn"
+			rm "$fn"
+		}
+
+	done;
 
 	#Delete MAC specific garbage unless you're using mac yourself
 	osparent=$( echo -n "$OSTYPE" | grep -o "darwin" )
