@@ -34,7 +34,7 @@ script_name=$( echo -n "$0" | grep -o '[^/]*$' )
 settings_list="working_directory zip_search_directory compile_cmd compile_output_name"
 settings_list=$( echo -n "$settings_list" | tr ' ' '\n' | sort | tr '\n' ' ' )
 
-VERSION="1.10.0"
+VERSION="1.10.1"
 
 
 #-----------------------------------------------FUNCTIONS-----------------------------------------------
@@ -131,10 +131,8 @@ recursive_unzip() {
 	#ie if the submission contains exclusively 1 directory, no files
 	empty_dir
 
-	echo "$( find . -mindepth 1 -maxdepth 1 -print ) \n\n\n"
-
+	#Recursive call
 	[ -n "$( find . -mindepth 1 -maxdepth 1 -type f -print | grep '.zip$' )" ] && {
-		echo 'ya\n\n\n\n'
 		recursive_unzip 0
 	}
 }
