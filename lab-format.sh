@@ -34,7 +34,7 @@ script_name=$( echo -n "$0" | grep -o '[^/]*$' )
 settings_list="working_directory zip_search_directory compile_cmd compile_output_name"
 settings_list=$( echo -n "$settings_list" | tr ' ' '\n' | sort | tr '\n' ' ' )
 
-VERSION="1.09"
+VERSION="1.10.0"
 
 
 #-----------------------------------------------FUNCTIONS-----------------------------------------------
@@ -86,6 +86,67 @@ reset_all_settings() {
 	#Call reset on all settings
 	reset_setting $settings_list
 }
+
+
+empty_dir() {
+	#Test if there is one inode, and if it is a directory,
+	#ie if the submission contains exclusively 1 directory, no files
+	[ "$( ls -l | wc -l )" -eq 2 ] && [ -d "$( ls )" ] && {
+		dir_to_delete=$( ls )
+
+		#move contents of directory to here
+		mv $dir_to_delete/* .
+
+		#Delete empty directory
+		rm -rf "$dir_to_delete"
+	}
+}
+
+recursive_unzip() {
+	#Grab submission name and extension type
+	find . -mindepth 1 -maxdepth 1 -type f -print | while IFS= read -r  fn; do
+
+		extension=$( echo "$fn" | grep -o '\.[^.]*$' )
+
+		#unzip zip file submissions and remove archive
+		[ "$extension" = ".zip" ] && {
+
+			#If on a deeper recursion, unzip into folder
+			[ "$1" -eq 0 ] && {
+				mkdir "$( echo -n $fn | sed 's/.zip//' )"
+				unzip -q "$fn" -d "$( echo -n $fn | sed 's/.zip//' )"
+
+			} || {
+				unzip -q "$fn"
+			}
+			rm "$fn"
+		}
+
+	done;
+
+	#Delete MAC specific garbage unless you're using mac yourself
+	delete_mac_garbage
+
+	#Test if there is one inode, and if it is a directory,
+	#ie if the submission contains exclusively 1 directory, no files
+	empty_dir
+
+	echo "$( find . -mindepth 1 -maxdepth 1 -print ) \n\n\n"
+
+	[ -n "$( find . -mindepth 1 -maxdepth 1 -type f -print | grep '.zip$' )" ] && {
+		echo 'ya\n\n\n\n'
+		recursive_unzip 0
+	}
+}
+
+delete_mac_garbage() {
+	osparent=$( echo -n "$OSTYPE" | grep -o "darwin" )
+	[ "$osparent" = "darwin" ] || {
+		find | grep "__MACOSX" | xargs -rn1 rm -rf
+		find | grep ".DS_STORE" | xargs -rn1 rm
+	}
+}
+
 
 #-----------------------------------------------SETTINGS-----------------------------------------------
 
@@ -417,38 +478,10 @@ find . -mindepth 1 -maxdepth 1 -type d -print | while IFS= read -r  student; do
 	#remove student directory prefix
 	student=$( echo -n "$student" | sed 's/\.\///' )
 
-	#Grab submission name and extension type
-	find . -mindepth 1 -maxdepth 1 -type f -print | while IFS= read -r  fn; do
-
-		extension=$( echo "$fn" | grep -o '\.[^.]*$' )
-
-		#unzip zip file submissions and remove archive
-		[ "$extension" = ".zip" ] && {
-			unzip -q "$fn"
-			rm "$fn"
-		}
-
-	done;
-
-	#Delete MAC specific garbage unless you're using mac yourself
-	osparent=$( echo -n "$OSTYPE" | grep -o "darwin" )
-	[ "$osparent" = "darwin" ] || {
-		find | grep "__MACOSX" | xargs -rn1 rm -rf
-		find | grep ".DS_STORE" | xargs -rn1 rm
-	}
 
 
-	#Test if there is one inode, and if it is a directory,
-	#ie if the submission contains exclusively 1 directory, no files
-	[ "$( ls -l | wc -l )" -eq 2 ] && [ -d "$( ls )" ] && {
-		dir_to_delete=$( ls )
-
-		#move contents of directory to here
-		mv $dir_to_delete/* .
-
-		#Delete empty directory
-		rm -rf "$dir_to_delete"
-	}
+	#recursively unzip zip files
+	recursive_unzip 1
 
 	#C++ specific stuff
 	[ $cpp_mode -eq 0 ] && {
