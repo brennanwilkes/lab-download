@@ -34,7 +34,7 @@ script_name=$( echo -n "$0" | grep -o '[^/]*$' )
 settings_list="working_directory zip_search_directory compile_cmd compile_output_name"
 settings_list=$( echo -n "$settings_list" | tr ' ' '\n' | sort | tr '\n' ' ' )
 
-VERSION="1.10.3"
+VERSION="1.11.0"
 
 
 #-----------------------------------------------FUNCTIONS-----------------------------------------------
@@ -532,46 +532,59 @@ find . -mindepth 1 -maxdepth 1 -type d -print | while IFS= read -r  student; do
 	#C++ specific stuff
 	[ $cpp_mode -eq 0 ] && {
 
-		#Search for makefiles in subdirectories and operate there instead
-		old_path="$( pwd )"
-		makefile_path="$( find -mindepth 2 -iname makefile -print )"
-		[ -d "$makefile_path" ] && cd $( echo -n "$makefile_path" | sed -E 's/\w+$//' )
-
 		#Progress debug info
 		echo " - Compiling $student's project"
 
-		#Delete leftover object and executable files
-		rm *.o 2>/dev/null
-		rm "main" 2>/dev/null
+		#Search for makefiles in subdirectories and operate there as well as '.'
+		find | grep -i -e 'makefile[^/]*$' -e '\.$' | grep -vi '^./Makefile$' | while IFS= read -r  makefile_path; do
 
-		#If theres a makefile, try running it
-		[ -f "makefile" ] || [ -f "Makefile" ] && {
-			make 2>>"$compile_output_name" >/dev/null
+			old_path="$( pwd )"
+			cd $( echo -n "$makefile_path" | sed -E 's/\w+$//' )
+
+			#If there are no .cpp or .h files, don't bother trying to compile
+			[ -z "$( ls | grep -e '.cpp$' -e '.h$' )" ] && {
+				cd $old_path
+				continue
+			}
+
+			#Delete leftover object and executable files
 			rm *.o 2>/dev/null
+			rm "main" 2>/dev/null
 
-			#makefile failed, try g++ compile command
-			[ $? -ne 0 ] && {
+			#If theres a makefile, try running it
+			[ -f "makefile" ] || [ -f "Makefile" ] && {
+				make 2>>"$compile_output_name" >/dev/null
+				rm *.o 2>/dev/null
+
+				#makefile failed, try g++ compile command
+				[ $? -ne 0 ] && {
+					$compile_cmd 2>>"$compile_output_name" >/dev/null
+				}
+			} || {
+
+				#no makefile, try g++ compile command
 				$compile_cmd 2>>"$compile_output_name" >/dev/null
 			}
-		} || {
 
-			#no makefile, try g++ compile command
-			$compile_cmd 2>>"$compile_output_name" >/dev/null
-		}
+			#format error file
+			temp_comple_output=$( cat "$compile_output_name" )
+			echo -n '' > "$compile_output_name"
+			#remove make warnings
+			echo -n "$temp_comple_output" | sed 'G' | grep -v '^make: ' >> "$compile_output_name"
 
-		#format error file
-		temp_comple_output=$( cat "$compile_output_name" )
-		echo -n '' > "$compile_output_name"
-		#remove make warnings
-		echo -n "$temp_comple_output" | sed 'G' | grep -v '^make: ' >> "$compile_output_name"
+			#If no errors, delete error log
+			[ -z "$( cat $compile_output_name )" ] && {
+				rm $compile_output_name
+			}
 
-		#If no errors, delete error log
-		[ -z "$( cat $compile_output_name )" ] && {
-			rm $compile_output_name
-		}
+			#Exit from subdirectory containing makefile
+			cd "$old_path"
 
-		#Exit from subdirectory containing makefile
-		cd "$old_path"
+		done
+
+
+
+
 
 	}
 
