@@ -1,4 +1,4 @@
-# lab-format v1.10.1
+# lab-format v1.10.2
 A tool to download and format lab/assignment submissions for marking by Brennan Wilkes
 
 *first*, download all lab/assignment submissions into a *single* zip file, and do not rename the file.

@@ -34,7 +34,7 @@ script_name=$( echo -n "$0" | grep -o '[^/]*$' )
 settings_list="working_directory zip_search_directory compile_cmd compile_output_name"
 settings_list=$( echo -n "$settings_list" | tr ' ' '\n' | sort | tr '\n' ' ' )
 
-VERSION="1.10.1"
+VERSION="1.10.2"
 
 
 #-----------------------------------------------FUNCTIONS-----------------------------------------------
@@ -88,7 +88,7 @@ reset_all_settings() {
 }
 
 
-empty_dir() {
+recursive_empty_dir() {
 	#Test if there is one inode, and if it is a directory,
 	#ie if the submission contains exclusively 1 directory, no files
 	[ "$( ls -l | wc -l )" -eq 2 ] && [ -d "$( ls )" ] && {
@@ -100,6 +100,36 @@ empty_dir() {
 		#Delete empty directory
 		rm -rf "$dir_to_delete"
 	}
+
+	#Iterate over directories
+	find . -mindepth 1 -maxdepth 1 -type d -print | while IFS= read -r  folder; do
+
+		#If a folder contains a single file, remove it from the folder
+		[ "$( ls -1 $folder | wc -l )" -eq 1 ] && {
+			filetopull=$( ls $folder )
+			[ -f "$filetopull" ] || {
+				[ -f "${folder}/${filetopull}" ] && {
+					mv "${folder}/${filetopull}" .
+					rm -rf "$folder"
+				}
+			}
+		}
+
+		#If that folder still exists
+		[ -d "$folder" ] && {
+
+			#recursively clean folder
+			old_dir=$( pwd )
+			cd "$folder"
+			recursive_empty_dir
+			cd "$old_dir"
+		}
+
+
+	done;
+
+
+
 }
 
 recursive_unzip() {
@@ -113,8 +143,11 @@ recursive_unzip() {
 
 			#If on a deeper recursion, unzip into folder
 			[ "$1" -eq 0 ] && {
-				mkdir "$( echo -n $fn | sed 's/.zip//' )"
-				unzip -q "$fn" -d "$( echo -n $fn | sed 's/.zip//' )"
+
+				#remove .zip extension, and remove date prefix data (Appended earlier in the script)
+				unzip_to_path="$( echo -n $fn | sed 's/.zip//' | sed -E 's/\w+ [0-9][0-9]?, [0-9][0-9][0-9][0-9] [0-9][0-9]?[0-9][0-9]? [AP]M//g' )"
+				mkdir "$unzip_to_path"
+				unzip -q "$fn" -d "$unzip_to_path"
 
 			} || {
 				unzip -q "$fn"
@@ -127,9 +160,8 @@ recursive_unzip() {
 	#Delete MAC specific garbage unless you're using mac yourself
 	delete_mac_garbage
 
-	#Test if there is one inode, and if it is a directory,
-	#ie if the submission contains exclusively 1 directory, no files
-	empty_dir
+	#Clean up directory structure. Remove subfolders that are not needed.
+	recursive_empty_dir
 
 	#Recursive call
 	[ -n "$( find . -mindepth 1 -maxdepth 1 -type f -print | grep '.zip$' )" ] && {
@@ -403,6 +435,8 @@ find . -type f -print | while IFS= read -r  file; do
 	#Honestly who does this??? Idk if anyone will but I'm trying to semi-idiot proof it.
 	submission_id=$( echo -n "$file" | sed -E 's/ - +/\x00/g' | cut -d '' -f1 | sed 's/\.\///' )
 
+	#echo "$name $date $extension $original_filename $submission_id"
+
 	#Create named folder
 	[ -d "$name" ] || {
 		mkdir "$name" 2>/dev/null
@@ -417,15 +451,20 @@ find . -type f -print | while IFS= read -r  file; do
 
 	#Move submission into folder and rename to date
 	[ "$extension" = ".zip" ] && {
-		mv "$file" "$name/$date$extension"
+
+		mv "$file" "$name/$date$original_filename"
 
 		#Enter named folder
 		cd "$name"
 
 		#Remove older submissions
-		[ $( ls -1 | wc -l ) -gt 1 ] && {
-			rm "$( ls -t | tail -n1 )"
+		#Is there a zip file with a different date?
+		[ $( ls -1 | grep '.zip$' | grep -v "$date" | wc -l ) -gt 0 ] && {
+
+			#Delete the oldest zip
+			rm "$( ls -t | grep '.zip$' | tail -n1 )"
 		}
+
 
 		#exit back to main directory
 		cd ..
@@ -465,6 +504,7 @@ find . -mindepth 1 -maxdepth 1 -type d -print | while IFS= read -r  student; do
 	echo -n "\e[1A\e[0K$(( $(( $num_done * 100 )) / $(( $total_to_do )) ))% Done"
 	num_done=$(( $num_done + 1 ))
 
+
 	#Add newline char if not in C++ mode
 	[ $cpp_mode -eq 1 ] && {
 		echo ""
@@ -476,10 +516,13 @@ find . -mindepth 1 -maxdepth 1 -type d -print | while IFS= read -r  student; do
 	#remove student directory prefix
 	student=$( echo -n "$student" | sed 's/\.\///' )
 
-
-
 	#recursively unzip zip files
-	recursive_unzip 1
+	#If there are multiple zip files, put them into folders
+	[ "$( ls | grep '.zip$' | wc -l )" -gt 1 ] && {
+		recursive_unzip 0
+	} || {
+		recursive_unzip 1
+	}
 
 	#C++ specific stuff
 	[ $cpp_mode -eq 0 ] && {
