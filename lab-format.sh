@@ -34,7 +34,7 @@ script_name=$( echo -n "$0" | grep -o '[^/]*$' )
 settings_list="working_directory zip_search_directory compile_cmd compile_output_name"
 settings_list=$( echo -n "$settings_list" | tr ' ' '\n' | sort | tr '\n' ' ' )
 
-VERSION="1.10.2"
+VERSION="1.10.3"
 
 
 #-----------------------------------------------FUNCTIONS-----------------------------------------------
@@ -145,7 +145,7 @@ recursive_unzip() {
 			[ "$1" -eq 0 ] && {
 
 				#remove .zip extension, and remove date prefix data (Appended earlier in the script)
-				unzip_to_path="$( echo -n $fn | sed 's/.zip//' | sed -E 's/\w+ [0-9][0-9]?, [0-9][0-9][0-9][0-9] [0-9][0-9]?[0-9][0-9]? [AP]M//g' )"
+				unzip_to_path="$( echo -n $fn | sed 's/.zip$//' | sed -E 's/\w+ [0-9][0-9]?, [0-9][0-9][0-9][0-9] [0-9][0-9]?[0-9][0-9]? [AP]M//g' )"
 				mkdir "$unzip_to_path"
 				unzip -q "$fn" -d "$unzip_to_path"
 
@@ -155,6 +155,11 @@ recursive_unzip() {
 			rm "$fn"
 		}
 
+	done;
+
+	#remove characters which I don't like from filenames
+	find . -mindepth 1 -maxdepth 1 -print | grep ' ' | while IFS= read -r  filewithspaces; do
+		mv "$filewithspaces" $( echo "$filewithspaces" | sed -e 's/ /-/g' )
 	done;
 
 	#Delete MAC specific garbage unless you're using mac yourself
@@ -426,10 +431,10 @@ find . -type f -print | while IFS= read -r  file; do
 	date=$( echo -n "$file" | sed -E 's/ - +/\x00/g' | cut -d '' -f3 )
 
 	#Parse submission extension
-	extension=$( echo -n "$file" | sed -E 's/ - +/\x00/g' | cut -d '' -f4 | grep -o '\.[^.]*$')
+	extension=$( echo -n "$file" | sed -E 's/ - +/\x00/g' | cut -d '' -f4- | grep -o '\.[^.]*$')
 
 	#Parse submission file name. This is for non-zips.
-	original_filename=$( echo -n "$file" | sed -E 's/ - +/\x00/g' | cut -d '' -f4 | tr ' ' '-' )
+	original_filename=$( echo -n "$file" | sed -E 's/ - +/\x00/g' | cut -d '' -f4- | tr ' ' '-' )
 
 	#Parse id number. This is for users who decide to upload multiple files of the exact same name.
 	#Honestly who does this??? Idk if anyone will but I'm trying to semi-idiot proof it.
